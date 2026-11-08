@@ -11,7 +11,8 @@ Clon de Asteroids en canvas HTML5 puro. Sin package.json, sin bundler, sin depen
 
 - Toda la lógica del juego está en `game.js` (un solo archivo, no usa módulos). `index.html` lo carga con `<script src>`; el código asume el DOM de esa página (canvas con id `canvas`).
 - `W`/`H` en `game.js` (800×600) deben coincidir con los atributos del `<canvas>` en `index.html`.
-- Estructura de `game.js`: input → utils → clases (`Bullet`, `Asteroid`, `Ship`, `Particle`, `PowerUp`) → estado global → `update(dt)` → `draw()` → loop con `requestAnimationFrame` (dt en segundos).
+- Estructura de `game.js`: input → utils → clases (`Bullet`, `Asteroid`, `ShootingStar`, `Ship`, `Particle`, `PowerUp`) → estado global → `update(dt)` → `draw()` → loop con `requestAnimationFrame` (dt en segundos).
+- `ShootingStar` (estrella fugaz) hereda de `Asteroid` y vive en el array `asteroids` — colisiones, split y puntos son los del mediano (size 2).
 
 ## Convenciones del repo
 
