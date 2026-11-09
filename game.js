@@ -191,6 +191,7 @@ class Ship {
     this.invincible    = 3;
     this.shootCooldown = 0;
     this.speedBoost    = 0;
+    this.tripleShot    = 0;
     this.dead          = false;
   }
 
@@ -199,6 +200,7 @@ class Ship {
     if (this.invincible    > 0) this.invincible    -= dt;
     if (this.shootCooldown > 0) this.shootCooldown -= dt;
     if (this.speedBoost    > 0) this.speedBoost    -= dt;
+    if (this.tripleShot    > 0) this.tripleShot    -= dt;
 
     const ROT   = 3.5;   // rad/s
     // Propulsión duplicada mientras dura el power-up de velocidad
@@ -226,7 +228,10 @@ class Ship {
     const NOSE = 21;
     const ox = this.x + Math.cos(this.angle) * NOSE;
     const oy = this.y + Math.sin(this.angle) * NOSE;
-    return [new Bullet(ox, oy, this.angle)];
+    // Triple: 3 balas en fila a lo largo del eje de disparo
+    const offsets = this.tripleShot > 0 ? [0, 10, 20] : [0];
+    return offsets.map(d =>
+      new Bullet(ox + Math.cos(this.angle) * d, oy + Math.sin(this.angle) * d, this.angle));
   }
 
   draw() {
@@ -295,9 +300,10 @@ class Particle {
   }
 }
 
-// ── Power-up (Velocidad) ──────────────────────────────────────────────────────
-const BOOST_DURATION = 5;   // s de efecto al recogerlo
-const POWERUP_TTL    = 10;  // s en pantalla antes de expirar
+// ── Power-ups (Velocidad / Triple) ────────────────────────────────────────────
+const BOOST_DURATION  = 5;  // s de efecto al recogerlo
+const TRIPLE_DURATION = 5;  // s de efecto al recogerlo
+const POWERUP_TTL     = 10; // s en pantalla antes de expirar
 
 class PowerUp {
   constructor(x, y) {
@@ -307,6 +313,7 @@ class PowerUp {
     this.ttl = POWERUP_TTL;
     this.t = 0;
     this.dead = false;
+    this.type = Math.random() < 0.5 ? 'speed' : 'triple';
 
     const angle = rand(0, Math.PI * 2);
     const speed = rand(20, 50);
@@ -330,20 +337,30 @@ class PowerUp {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.scale(pulse, pulse);
-    ctx.strokeStyle = '#ffd24a';
-    ctx.lineWidth   = 1.5;
-    ctx.lineJoin    = 'round';
+    ctx.lineWidth = 1.5;
+    ctx.lineJoin  = 'round';
 
-    // Rayo
-    ctx.beginPath();
-    ctx.moveTo( 2, -10);
-    ctx.lineTo(-4,   2);
-    ctx.lineTo( 0,   2);
-    ctx.lineTo(-2,  10);
-    ctx.lineTo( 4,  -2);
-    ctx.lineTo( 0,  -2);
-    ctx.closePath();
-    ctx.stroke();
+    if (this.type === 'triple') {
+      // Triple disparo: tres puntos en fila
+      ctx.fillStyle = '#6ee7ff';
+      for (const dy of [-8, 0, 8]) {
+        ctx.beginPath();
+        ctx.arc(0, dy, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else {
+      // Velocidad: rayo
+      ctx.strokeStyle = '#ffd24a';
+      ctx.beginPath();
+      ctx.moveTo( 2, -10);
+      ctx.lineTo(-4,   2);
+      ctx.lineTo( 0,   2);
+      ctx.lineTo(-2,  10);
+      ctx.lineTo( 4,  -2);
+      ctx.lineTo( 0,  -2);
+      ctx.closePath();
+      ctx.stroke();
+    }
     ctx.restore();
   }
 }
@@ -469,11 +486,12 @@ function update(dt) {
   particles.forEach(p => p.update(dt));
   powerUps.forEach(p => p.update(dt));
 
-  // Nave recoge el power-up de velocidad
+  // Nave recoge el power-up (los efectos reinician, no acumulan)
   for (const p of powerUps) {
     if (dist(ship, p) < ship.radius + p.radius) {
       p.dead = true;
-      ship.speedBoost = BOOST_DURATION;  // reinicia, no acumula
+      if (p.type === 'triple') ship.tripleShot = TRIPLE_DURATION;
+      else                     ship.speedBoost = BOOST_DURATION;
       break;
     }
   }
@@ -550,12 +568,18 @@ function drawHUD() {
   for (let i = 0; i < lives; i++)
     drawLifeIcon(W - 16 - i * 22, 18);
 
-  // Contador del boost de velocidad
-  if (ship.speedBoost > 0 && !ship.dead) {
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffd24a';
-    ctx.fillText(`VELOCIDAD x2  ${ship.speedBoost.toFixed(1)}s`, W / 2, H - 14);
-  }
+  // Contadores de power-ups activos (apilados de abajo hacia arriba)
+  const activeEffects = [];
+  if (ship.speedBoost > 0 && !ship.dead)
+    activeEffects.push(['#ffd24a', `VELOCIDAD x2  ${ship.speedBoost.toFixed(1)}s`]);
+  if (ship.tripleShot > 0 && !ship.dead)
+    activeEffects.push(['#6ee7ff', `TRIPLE DISPARO  ${ship.tripleShot.toFixed(1)}s`]);
+
+  ctx.textAlign = 'center';
+  activeEffects.forEach(([color, text], i) => {
+    ctx.fillStyle = color;
+    ctx.fillText(text, W / 2, H - 14 - i * 18);
+  });
 }
 
 function drawOverlay(title, sub) {
