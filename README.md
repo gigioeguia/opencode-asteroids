@@ -40,6 +40,8 @@ Luego visita `http://localhost:3000`.
 | Asteroide pequeño | 100    |
 | OVNI              | 200    |
 
+Con la nave **TITÁN** todos los puntos se duplican (x2).
+
 ## Características
 
 - 3 vidas con invencibilidad temporal al reaparecer (parpadeo)
@@ -47,5 +49,6 @@ Luego visita `http://localhost:3000`.
 - Partículas de explosión al destruir asteroides
 - Power-up de triple disparo: tres balas en abanico durante 5 s
 - Sistema de skins: cambia la apariencia de la nave con `C` (se recuerda entre sesiones)
+- Nave TITÁN (skin morado): el doble de grande —hitbox incluida— a cambio del doble de puntos; el escudo también crece con ella
 - Power-up de escudo (contorno cian): burbuja que destruye balas enemigas, asteroides y OVNI al contacto durante 5 s
 - OVNI enemigo que aparece periódicamente, zigzaguea y dispara proyectiles contra la nave
