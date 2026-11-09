@@ -1,0 +1,26 @@
+# Formatea issues recién creados: conserva el texto original del autor tal
+# cual, añade secciones de contexto para revisión y asigna labels por keywords.
+# Autenticación por OIDC contra la OpenCode App (mismo mecanismo que opencode.yml).
+name: issue-formatter
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    permissions:
+      # id-token: OIDC -> token de la OpenCode App (editar issues sin GITHUB_TOKEN)
+      id-token: write
+      issues: write
+      contents: read  # checkout del script
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Format issue
+        run: python3 .github/scripts/format_issue.py
