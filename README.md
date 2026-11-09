@@ -52,3 +52,7 @@ Con la nave **TITÁN** todos los puntos se duplican (x2).
 - Nave TITÁN (skin morado): el doble de grande —hitbox incluida— a cambio del doble de puntos; el escudo también crece con ella
 - Power-up de escudo (contorno cian): burbuja que destruye balas enemigas, asteroides y OVNI al contacto durante 5 s
 - OVNI enemigo que aparece periódicamente, zigzaguea y dispara proyectiles contra la nave
+
+
+## Link
+https://github.com/gigioeguia/opencode-asteroids/issues/1#issuecomment-6732249839
