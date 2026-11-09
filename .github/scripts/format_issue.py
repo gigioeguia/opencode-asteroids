@@ -7,7 +7,8 @@ Autenticación: intercambia el JWT de OIDC del runner (audience
 "opencode-github-action") por un token de la OpenCode App en
 api.opencode.ai — mismo flujo que anomalyco/opencode/github, sin usar
 GITHUB_TOKEN. Requiere permissions: id-token: write y la OpenCode App
-instalada en el repo.
+instalada en el repo. El intercambio se hace con bun (exchange_token.mjs)
+porque Cloudflare bloquea a urllib desde las IPs de datacenter de GitHub.
 
 Uso local (sin tocar GitHub):
     GITHUB_EVENT_NAME=issues GITHUB_SHA=abc1234 \
@@ -16,6 +17,8 @@ Uso local (sin tocar GitHub):
 
 import json
 import os
+import shutil
+import subprocess
 import sys
 import unicodedata
 import urllib.error
@@ -121,11 +124,36 @@ def fetch_oidc_jwt():
 
 def fetch_app_token():
     """Intercambia el JWT por un token de instalación de la OpenCode App."""
+    jwt = fetch_oidc_jwt()
+    # Cloudflare bloquea urllib desde las IPs de datacenter de GitHub (1010);
+    # con bun usamos el mismo stack HTTP que la action oficial de OpenCode.
+    if shutil.which("bun"):
+        return exchange_with_bun(jwt)
+    return exchange_with_urllib(jwt)
+
+
+def exchange_with_bun(jwt):
+    """Intercambio vía exchange_token.mjs (ver cabecera de ese archivo)."""
+    helper = os.path.join(os.path.dirname(os.path.abspath(__file__)), "exchange_token.mjs")
+    result = subprocess.run(
+        ["bun", helper],
+        env={**os.environ, "OIDC_EXCHANGE_URL": OIDC_EXCHANGE_URL, "OIDC_JWT": jwt},
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.strip().splitlines()[-1] if result.stderr else "bun falló sin salida"
+        sys.exit(detail)
+    return result.stdout.strip()
+
+
+def exchange_with_urllib(jwt):
     request = urllib.request.Request(
         OIDC_EXCHANGE_URL,
         method="POST",
         headers={
-            "Authorization": f"Bearer {fetch_oidc_jwt()}",
+            "Authorization": f"Bearer {jwt}",
             "User-Agent": USER_AGENT,
         },
     )

@@ -22,5 +22,14 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Ensure Bun
+        # El intercambio OIDC corre con bun (mismo stack HTTP que la action
+        # oficial de OpenCode); suele venir preinstalado en las imágenes de GitHub.
+        run: |
+          if ! command -v bun >/dev/null 2>&1; then
+            curl -fsSL https://bun.sh/install | bash
+            echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
+          fi
+
       - name: Format issue
         run: python3 .github/scripts/format_issue.py
