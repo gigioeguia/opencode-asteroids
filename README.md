@@ -33,15 +33,19 @@ Luego visita `http://localhost:3000`.
 
 ## Puntuación
 
-| Asteroide | Puntos |
-| --------- | ------ |
-| Grande    | 20     |
-| Mediano   | 50     |
-| Pequeño   | 100    |
+| Elemento          | Puntos |
+| ----------------- | ------ |
+| Asteroide grande  | 20     |
+| Asteroide mediano | 50     |
+| Asteroide pequeño | 100    |
+| OVNI              | 200    |
 
 ## Características
 
 - 3 vidas con invencibilidad temporal al reaparecer (parpadeo)
 - Asteroides se parten en fragmentos más pequeños al ser destruidos
 - Partículas de explosión al destruir asteroides
+- Power-up de triple disparo: tres balas en abanico durante 5 s
 - Sistema de skins: cambia la apariencia de la nave con `C` (se recuerda entre sesiones)
+- Power-up de escudo (contorno cian): burbuja que destruye balas enemigas, asteroides y OVNI al contacto durante 5 s
+- OVNI enemigo que aparece periódicamente, zigzaguea y dispara proyectiles contra la nave
