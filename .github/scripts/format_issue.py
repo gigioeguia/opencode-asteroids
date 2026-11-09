@@ -36,6 +36,10 @@ AGENT_COMMANDS = ("/oc", "/opencode")
 OIDC_AUDIENCE = "opencode-github-action"
 OIDC_EXCHANGE_URL = "https://api.opencode.ai/exchange_github_app_token"
 
+# api.opencode.ai está tras Cloudflare, que bloquea el UA por defecto de
+# urllib ("Python-urllib/3.x") con un 403 "error code: 1010".
+USER_AGENT = "opencode-issue-formatter/1.0"
+
 # ── Reglas de clasificación ──
 # Keywords en español; la comparación ignora acentos y mayúsculas.
 LABEL_RULES = {
@@ -106,7 +110,10 @@ def fetch_oidc_jwt():
     separator = "&" if "?" in base_url else "?"
     request = urllib.request.Request(
         f"{base_url}{separator}audience={urllib.parse.quote(OIDC_AUDIENCE)}",
-        headers={"Authorization": f"Bearer {request_token}"},
+        headers={
+            "Authorization": f"Bearer {request_token}",
+            "User-Agent": USER_AGENT,
+        },
     )
     with urllib.request.urlopen(request) as response:
         return json.load(response)["value"]
@@ -117,7 +124,10 @@ def fetch_app_token():
     request = urllib.request.Request(
         OIDC_EXCHANGE_URL,
         method="POST",
-        headers={"Authorization": f"Bearer {fetch_oidc_jwt()}"},
+        headers={
+            "Authorization": f"Bearer {fetch_oidc_jwt()}",
+            "User-Agent": USER_AGENT,
+        },
     )
     try:
         with urllib.request.urlopen(request) as response:
@@ -145,6 +155,7 @@ def api(token, method, path, payload=None):
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": API_VERSION,
             "Content-Type": "application/json",
+            "User-Agent": USER_AGENT,
         },
     )
     try:
